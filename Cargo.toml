@@ -1,0 +1,10 @@
+[package]
+name = "gbalib"
+version = "0.1.0"
+authors = ["Joshua Karns"]
+
+[dependencies]
+
+[lib]
+name = "gbalib"
+path = "src/lib.rs"
