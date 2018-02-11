@@ -1,0 +1,14 @@
+[package]
+name = "gbaimg"
+version = "0.1.0"
+authors = ["Joshua Karns"]
+
+[dependencies]
+image = "*"
+syn = "*"
+quote = "*"
+
+[lib]
+name = "gbaimg"
+path = "src/lib.rs"
+proc-macro = true
