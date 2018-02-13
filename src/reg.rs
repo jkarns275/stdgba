@@ -1,6 +1,5 @@
 use ptr::Ptr;
 
-pub const GBA_ID: Ptr<u16> = Ptr::from_u32(0x03000000);
 pub const REG_GRAPHICS_MODE: Ptr<u16> = Ptr::from_u32(0x04000000);
 pub const REG_IME: Ptr<u16> = Ptr::from_u32(0x04000208);
 pub const REG_IE: Ptr<u16> = Ptr::from_u32(0x04000200);

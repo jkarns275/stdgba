@@ -5,22 +5,20 @@ extern crate syn;
 extern crate syntax;
 use syntax::parse::token;
 
-use proc_macro::{ TokenStream, TokenNode, Term };
+use proc_macro::{ TokenStream, TokenNode };
 
 extern crate image;
-use image::*;
 
 #[macro_use]
 extern crate quote;
 use quote::*;
 
-use std::fs::File;
 use std::mem::transmute;
-use std::collections::HashMap;
 
 #[proc_macro]
 pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
     let mut colors = Vec::<u16>::with_capacity(1 << 4);
+    colors.push(0);
 
     let img = load_img(input);
     let (width, height) = img.dimensions();
@@ -33,9 +31,9 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
     let mut index = 0usize;
     for iy in 0..height / 8 {
         for ix in 0..width / 8 {
-            for y in (0..8) {
+            for y in 0..8 {
                 //println!("");
-                for x in (0..8) {
+                for x in 0..8 {
                     let rgb = img.get_pixel(ix * 8 + x, iy * 8 + y).data;
                     //print!("Pixel at ({}, {}): {:?}; ", ix * 8 + x, iy * 8 + y, rgb);
                     let converted_red = ((rgb[0] as f32 / 255.0f32) * 31.0f32) as u16;
@@ -63,7 +61,6 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
                     } else {
                         pixels[index >> 1] |= (color_index << 4) as u8;
                     }
-                    println!("{}", index);
                     index += 1;
                 }
             }
@@ -71,6 +68,7 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
         }
     }
 
+    /*
     let mut newln = 0;
     print!("palette: {{ ");
     for x in colors.iter() {
@@ -92,14 +90,16 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
         newln += 1;
     }
     println!("}}");
+    */
 
-    (quote! { (&[#(#colors),*] &[#(#pixels),*]) }).into()
+    (quote! { (&[#(#colors),*], &[#(#pixels),*]) }).into()
 }
 
 
 #[proc_macro]
 pub fn img_as_palleted_sprite_8bpp(input: TokenStream) -> TokenStream {
     let mut colors = Vec::<u16>::with_capacity(1 << 8);
+    colors.push(0);
 
     let img = load_img(input);
     let (width, height) = img.dimensions();
@@ -114,9 +114,9 @@ pub fn img_as_palleted_sprite_8bpp(input: TokenStream) -> TokenStream {
     let mut index = 0usize;
     for iy in 0..height / 8 {
         for ix in 0..width / 8 {
-            for y in (0..8) {
+            for y in 0..8 {
                 //println!("");
-                for x in (0..8) {
+                for x in 0..8 {
                     let rgb = img.get_pixel(ix * 8 + x, iy * 8 + y).data;
                     //print!("Pixel at ({}, {}): {:?}; ", ix * 8 + x, iy * 8 + y, rgb);
                     let converted_red = ((rgb[0] as f32 / 255.0f32) * 31.0f32) as u16;
@@ -146,16 +146,40 @@ pub fn img_as_palleted_sprite_8bpp(input: TokenStream) -> TokenStream {
         }
     }
 
-    (quote! { (&[#(#colors),*], &#(#pixels),*) }).into()
+    /*
+    let mut newln = 0;
+    print!("palette: {{ ");
+    for x in colors.iter() {
+        if newln == 16 {
+            newln = 0;
+            println!("");
+        }
+        print!("{:x}, ", x);
+        newln += 1;
+    }
+    newln = 0;
+    println!("}}\nimg: ");
+    for x in pixels.iter() {
+        if newln == 32 {
+            newln = 0;
+            println!("");
+        }
+        print!("{:02x}, ", x);
+        newln += 1;
+    }
+    println!("}}");
+    */
+    let p = (quote! { (&[#(#colors),*], &[#(#pixels),*]) });
+    p.into()
 }
 
 #[proc_macro]
-pub fn img_as_palleted_sprite_16bpp(input: TokenStream) -> TokenStream {
+pub fn img_as_palleted_sprite_16bpp(_input: TokenStream) -> TokenStream {
     panic!("aa")
 }
 
 fn load_img(input: TokenStream) -> image::RgbImage {
-    let mut tokens: Vec<_> = input.into_iter().collect();
+    let tokens: Vec<_> = input.into_iter().collect();
     if tokens.len() != 1 {
         panic!(format!("Argument should be a single string, but got {} arguments", tokens.len()));
     }

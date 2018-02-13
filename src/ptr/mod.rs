@@ -44,6 +44,7 @@ impl<T: Sized> Ptr<T> {
         volatile_load(self.ptr)
     }
 
+    #[inline(always)]
     pub unsafe fn volatile_store(&mut self, dat: T) {
         volatile_store(self.ptr_mut, dat);
     }

@@ -1,6 +1,7 @@
+use core::mem::transmute;
+
 /// Further documentation sprite related gba things can be found here: https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm#Graphics%20Hardware%20Overview
 /// and also here: https://www.coranac.com/tonc/text/regobj.htm
-
 
 #[derive(Copy, Clone)]
 #[repr(u16)]
@@ -144,7 +145,7 @@ impl SpriteAttributes {
 
     pub fn default() -> Self { SpriteAttributes { a0: 0, a1: 0, a2: 0, filler: 0 } }
 
-    pub fn new( x: u16, y: u16, affine_mode: AffineMode, sprite_mode: SpriteMode,
+    pub fn new( x: i16, y: i16, affine_mode: AffineMode, sprite_mode: SpriteMode,
                 dimensions: SpriteDimensions, color_mode: ColorMode, mosaic_enabled: bool,
                 horizontal_flipped: bool, vertical_flipped: bool, priority: SpritePriority,
                 palette_bank_index: u16, tile_index: u16) -> Self {
@@ -166,16 +167,20 @@ impl SpriteAttributes {
         result
     }
 
-    pub fn set_x(&mut self, mut x: u16) {
-        x &= Self::X_COORD_MASK;
-        self.a1 &= !SpriteAttributes::X_COORD_MASK;
-        self.a1 |= x;
+    pub fn set_x(&mut self, mut x: i16) {
+        unsafe {
+            x &= transmute::<u16, i16>(Self::X_COORD_MASK);
+            self.a1 &= !SpriteAttributes::X_COORD_MASK;
+            self.a1 |= transmute::<i16, u16>(x);
+        }
     }
 
-    pub fn set_y(&mut self, mut y: u16) {
-        y &= Self::Y_COORD_MASK;
-        self.a0 &= !SpriteAttributes::Y_COORD_MASK;
-        self.a0 |= y;
+    pub fn set_y(&mut self, mut y: i16) {
+        unsafe {
+            y &= transmute::<u16, i16>(Self::X_COORD_MASK);
+            self.a0 &= !SpriteAttributes::Y_COORD_MASK;
+            self.a0 |= transmute::<i16, u16>(y);
+        }
     }
 
     pub fn set_priority(&mut self, priority: SpritePriority) {

@@ -33,8 +33,7 @@ impl<Item, Ind> Index<Ind> for StaticArr<Item>
 
     fn index(&self, index: Ind) -> &'static Item {
         unsafe {
-            let p = self.ptr.clone();
-            p.offset(index.into());
+            let p: Ptr<_> = self.ptr.offset(index.into());
             transmute(p)
         }
     }
@@ -46,8 +45,7 @@ impl<Item, Ind> IndexMut<Ind> for StaticArr<Item>
 
     fn index_mut(&mut self, index: Ind) -> &'static mut Item {
         unsafe {
-            let p = self.ptr.clone();
-            p.offset(index.into());
+            let p: Ptr<_> = self.ptr.offset(index.into());
             transmute(p)
         }
     }
