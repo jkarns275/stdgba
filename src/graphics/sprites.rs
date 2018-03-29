@@ -1,7 +1,24 @@
 use core::mem::transmute;
+use collections::StaticArr;
+use ptr::Ptr;
 
 /// Further documentation sprite related gba things can be found here: https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm#Graphics%20Hardware%20Overview
 /// and also here: https://www.coranac.com/tonc/text/regobj.htm
+
+
+pub const OBJECT_SPRITE_ATTRIBUTES: StaticArr<SpriteAttributes> = StaticArr::new(Ptr::from_u32(0x07000000), 128);
+pub const OBJECT_SPRITE_AFFINE: StaticArr<SpriteAttributes> = StaticArr::new(Ptr::from_u32(0x07000000), 32);
+
+pub type Charblock = [u8; 0x4000];
+pub const TILE_MEMORY: StaticArr<Charblock> = StaticArr::new(Ptr::from_u32(0x06000000), 6);
+pub const PALETTE_MEMORY: StaticArr<u16> = StaticArr::new(Ptr::from_u32(0x05000200), 256);
+
+pub fn oam_clear() {
+    let p = SpriteAttributes::default();
+    for i in 0..128 {
+        p.set(i);
+    }
+}
 
 #[derive(Copy, Clone)]
 #[repr(u16)]
@@ -142,6 +159,11 @@ impl SpriteAttributes {
     const TILE_INDEX_MASK: u16          = 0x03FF_u16;
     const PRIORITY_MASK: u16            = 0x0C00_u16;
     const PALETTE_BANK_INDEX_MASK: u16  = 0xF000_u16;
+
+    /// Copy this SpriteAttributes into the n'th SA slot.
+    pub fn set(self, n: u32) {
+        OBJECT_SPRITE_ATTRIBUTES[n as i32] = self;
+    }
 
     pub fn default() -> Self { SpriteAttributes { a0: 0, a1: 0, a2: 0, filler: 0 } }
 

@@ -8,12 +8,6 @@ use collections::StaticArr;
 pub mod sprites;
 pub use self::sprites::*;
 
-pub const OBJECT_SPRITE_ATTRIBUTES: StaticArr<sprites::SpriteAttributes> = StaticArr::new(Ptr::from_u32(0x07000000), 128);
-pub const OBJECT_SPRITE_AFFINE: StaticArr<sprites::SpriteAttributes> = StaticArr::new(Ptr::from_u32(0x07000000), 32);
-
-pub type Charblock = [u8; 0x4000];
-pub const TILE_MEMORY: StaticArr<Charblock> = StaticArr::new(Ptr::from_u32(0x06000000), 6);
-pub const PALETTE_MEMORY: StaticArr<u16> = StaticArr::new(Ptr::from_u32(0x05000200), 256);
 
 #[derive(Clone, Copy)]
 #[repr(u8)]

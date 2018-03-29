@@ -3,7 +3,7 @@ use core::mem;
 use core::ops::Deref;
 
 #[derive(Copy, Clone)]
-pub struct InputState(u16);
+pub struct InputState(pub u16);
 
 impl InputState {
     pub fn current() -> Self {
