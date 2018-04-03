@@ -5,6 +5,7 @@ authors = ["Joshua Karns"]
 
 [dependencies]
 "gbaimg" = {path = "gbaimg", version = "*"}
+
 [lib]
 name = "gbalib"
 path = "src/lib.rs"
