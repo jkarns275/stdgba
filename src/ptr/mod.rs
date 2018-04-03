@@ -18,9 +18,9 @@ impl<T: Sized> Ptr<T> {
 
     pub const fn from_mut_ptr(ptr_mut: * mut T) -> Self { Ptr { ptr_mut } }
 
-    pub unsafe fn from_ref(const_ref: &T) -> Self { Ptr { ptr: mem::transmute::<&T, * const T>(const_ref) } }
+    pub const fn from_ref(const_ref: &T) -> Self { Ptr { ptr: const_ref as * const T } }
 
-    pub unsafe fn from_mut_ref(mut_ref: &mut T) -> Self { Ptr { ptr_mut: mem::transmute::<&mut T, * mut T>(mut_ref) } }
+    pub fn from_mut_ref(mut_ref: &mut T) -> Self { Ptr { ptr_mut: mut_ref as * mut T } }
 
     pub const fn null() -> Self { Ptr { num: 0 } }
 
@@ -30,9 +30,9 @@ impl<T: Sized> Ptr<T> {
 
     pub const unsafe fn is_null(&self) -> bool { self.num == 0 }
 
-    pub unsafe fn into_ref(self) -> &'static T { mem::transmute(self.ptr) }
+    pub unsafe fn as_ref(self) -> &'static T { mem::transmute(self.ptr) }
 
-    pub unsafe fn into_mut_ref(self) -> &'static mut T { mem::transmute(self.ptr_mut) }
+    pub unsafe fn as_mut(mut self) -> &'static mut T { mem::transmute(self.ptr_mut) }
 
     pub unsafe fn offset(mut self, n: i32) -> Self {
         self.signed += n * mem::size_of::<T>() as i32;
@@ -70,7 +70,7 @@ impl<T: Sized, Ind: Sized + Into<i32>> IndexMut<Ind> for Ptr<T> {
         let i: i32 = index.into();
         unsafe {
             let x = Ptr::<T>::from_u32(self.num).offset(i);
-            x.into_mut_ref()
+            x.as_mut()
         }
     }
 }
@@ -82,7 +82,7 @@ impl<T: Sized, Ind: Sized + Into<i32>> Index<Ind> for Ptr<T> {
         let i: i32 = index.into();
         unsafe {
             let x = Ptr::<T>::from_u32(self.num).offset(i);
-            x.into_ref()
+            x.as_ref()
         }
     }
 }

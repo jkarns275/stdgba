@@ -39,24 +39,20 @@ struct Chunk {
 impl Chunk {
 
     #[inline(always)]
-    pub unsafe fn get_free_head() -> Ptr<Ptr<Chunk>> {
-        mem::transmute(FREE_HEAD_LOC)
-    }
+    pub unsafe fn get_free_head() -> Ptr<Ptr<Chunk>> { Ptr::from_u32(FREE_HEAD_LOC) }
 
     /// Should only be used when the current head is null!
     pub unsafe fn set_free_head(ptr: Ptr<Chunk>) {
-        let current_head: * mut u32 = mem::transmute(FREE_HEAD_LOC);
+        let current_head: * mut u32 = FREE_HEAD_LOC as * mut u32;
         *current_head = ptr.num;
     }
 
     #[inline(always)]
-    pub unsafe fn get_used_head() -> Ptr<Ptr<Chunk>> {
-        mem::transmute(USED_HEAD_LOC)
-    }
+    pub unsafe fn get_used_head() -> Ptr<Ptr<Chunk>> { Ptr::from_u32(USED_HEAD_LOC) }
 
     /// Should only be used when the current head is null!
     pub unsafe fn set_used_head(ptr: Ptr<Chunk>) {
-        let current_head: * mut u32 = mem::transmute(USED_HEAD_LOC);
+        let current_head: * mut u32 = USED_HEAD_LOC as * mut u32;
         *current_head = ptr.num;
     }
 
@@ -176,10 +172,10 @@ impl Chunk {
     pub unsafe fn as_gba_ptr(&mut self) -> Ptr<Chunk> { Ptr::from_mut_ref(self) }
 
     #[inline(always)]
-    pub unsafe fn as_ptr(&self) -> * const Chunk { mem::transmute::<&Chunk, * const Chunk>(self) }
+    pub const fn as_ptr(&self) -> * const Chunk { self as * const Chunk }
 
     #[inline(always)]
-    pub unsafe fn as_ptr_mut(&mut self) -> * mut Chunk { mem::transmute(self) }
+    pub unsafe fn as_ptr_mut(&mut self) -> * mut Chunk { self as * mut Chunk}
 
     /// Remove this chunk from the list it is contained in.
     pub unsafe fn remove_from_free_list(&mut self) {
