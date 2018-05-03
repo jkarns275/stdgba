@@ -10,6 +10,7 @@ That would include:
   - image-to-tile macros (i.e. load images into static slices at runtime) ☑
   - a complete API to the GBA's graphics functionality (partially done) ☐
   - bindings to the GBA's link cable functionality ☐
+  - documentation and examples ☐
   
 Possible future goals would be:
   - better API design
