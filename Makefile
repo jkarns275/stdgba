@@ -1,2 +1,3 @@
+.PHONY: build
 build:
-    xargo build --target gba --release
+	xargo build --target gba --release
