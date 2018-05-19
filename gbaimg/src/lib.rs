@@ -1,11 +1,12 @@
 #![feature(proc_macro, rustc_private)]
 extern crate proc_macro;
 extern crate syn;
+use syn::{ DeriveInput, LitStr };
 
 extern crate syntax;
 use syntax::parse::token;
 
-use proc_macro::{ TokenStream, TokenNode, };
+use proc_macro::{ TokenStream, TokenTree, };
 
 extern crate image;
 
@@ -15,48 +16,14 @@ use quote::*;
 
 use std::mem::transmute;
 
-fn process_tokens(input: TokenStream) -> (u32, u32, String) {
-    let mut tokens = input.into_iter()
-        .filter_map(|x| unsafe {
-            match x.kind {
-                TokenNode::Literal(lit) => Some(transmute(lit)),
-                _ => None
-            }
-        })
-        .collect::<Vec<token::Token>>();
-    if tokens.len() < 3 {
-        panic!(format!("Expected at least 3 tokens, got {}", tokens.len()))
-    }
-
-    let sprite_width = match &tokens[0] {
-        &token::Token::Literal(token::Lit::Integer(ref s), _) => {
-            s.as_str().parse::<u32>().unwrap()
-        },
-        _ => panic!("Expected sprite width (integer), got something else..")
-    };
-
-    let sprite_height = match &tokens[1] {
-        &token::Token::Literal(token::Lit::Integer(ref s), _) => {
-            s.as_str().parse::<u32>().unwrap()
-        },
-        _ => panic!("Expected sprite width (integer), got something else..")
-    };
-    let path = match &tokens[2] {
-        &token::Token::Literal(token::Lit::Str_(s), _) => {
-            s.as_str().to_string()
-        },
-        &token::Token::Literal(token::Lit::StrRaw(s, _), _) => {
-            s.as_str().to_string()
-        },
-        x @ _ => panic!(format!("Argument should be a string, got {:?}", x))
-    };
-
-    (sprite_width, sprite_height, path)
+fn process_tokens(input: TokenStream) -> String {
+  let input: LitStr = syn::parse(input).unwrap();
+  input.value()
 }
 
 #[proc_macro]
 pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
-    let (sprite_width, sprite_height, path) = process_tokens(input);
+    let path = process_tokens(input);
 
     let mut colors = Vec::<u16>::with_capacity(1 << 4);
     colors.push(0x8000);
@@ -70,10 +37,10 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
 
     let mut pixels =  vec![0u8; (width * height) as usize >> 1];
     let mut index = 0usize;
-    for sy in 0..height / sprite_height { for sx in 0..width / sprite_width {
-        for iy in 0..sprite_height / 8 { for ix in 0..sprite_width / 8 {
+    //for sy in 0..height / sprite_height { for sx in 0..width / sprite_width {
+        for iy in 0..height / 8 { for ix in 0..width / 8 {
             for y in 0..8 { for x in 0..8 {
-                let rgb = img.get_pixel(sx * sprite_width + ix * 8 + x, sy * sprite_height + iy * 8 + y).data;
+                let rgb = img.get_pixel(/*sx * sprite_width +*/ ix * 8 + x, /*sy * sprite_height +*/ iy * 8 + y).data;
                 //print!("Pixel at ({}, {}): {:?}; ", ix * 8 + x, iy * 8 + y, rgb);
                 let converted_red = ((rgb[0] as f32 / 255.0f32) * 31.0f32) as u16;
                 let converted_green = ((rgb[1] as f32 / 255.0f32) * 31.0f32) as u16;
@@ -103,7 +70,7 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
                 index += 1;
             }}
         }}
-    }}
+    //}}
 
     /*
     let mut newln = 0;
@@ -135,7 +102,7 @@ pub fn img_as_palleted_sprite_4bpp(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn img_as_palleted_sprite_8bpp(input: TokenStream) -> TokenStream {
-    let (sprite_width, sprite_height, path) = process_tokens(input);
+    let path = process_tokens(input);
 
     let mut colors = Vec::<u16>::with_capacity(1 << 8);
     colors.push(0);
@@ -151,11 +118,11 @@ pub fn img_as_palleted_sprite_8bpp(input: TokenStream) -> TokenStream {
 
     let mut pixels = vec![0u8; (width * height) as usize];
     let mut index = 0usize;
-    for sy in 0..height / sprite_height { for sx in 0..width / sprite_width {
-        for iy in 0..sprite_height / 8 { for ix in 0..sprite_width / 8 {
+    //for sy in 0..height / sprite_height { for sx in 0..width / sprite_width {
+        for iy in 0..height / 8 { for ix in 0..width / 8 {
             for y in 0..8 { for x in 0..8 {
                 //println!("sx: {}, sy: {}, ix: {}, iy: {}, x: {}, y: {}", sx, sy, ix, iy, x, y);
-                let rgb = img.get_pixel(sx * sprite_width + ix * 8 + x, sy * sprite_height + iy * 8 + y).data;
+                let rgb = img.get_pixel(/*sx * sprite_width +*/ ix * 8 + x, /*sy * sprite_height +*/ iy * 8 + y).data;
                 //print!("Pixel at ({}, {}): {:?}; ", ix * 8 + x, iy * 8 + y, rgb);
                 let converted_red = ((rgb[0] as f32 / 255.0f32) * 31.0f32) as u16;
                 let converted_green = ((rgb[1] as f32 / 255.0f32) * 31.0f32) as u16;
@@ -180,7 +147,7 @@ pub fn img_as_palleted_sprite_8bpp(input: TokenStream) -> TokenStream {
                 index += 1;
             }}
         }}
-    }}
+    //}}
 
     /*
     let mut newln = 0;
