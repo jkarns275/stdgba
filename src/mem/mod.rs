@@ -1,15 +1,16 @@
 use ptr::Ptr;
 use core::mem::{ size_of };
-const debug: Ptr<u32> = Ptr::from_u32(0x03000000);
+
+// const debug: Ptr<u32> = Ptr::from_u32(0x03000000);
 pub unsafe fn memcpy<T: Sized>(dst: Ptr<T>, src: Ptr<T>, items: u32) -> Ptr<T> where Ptr<T>: Clone + Copy {
-    *debug = 0;
+    // *debug = 0;
     let mut p = Ptr::<u32>::from_u32(0x03000004);
     if items == 0 || dst.is_null() || src.is_null() {
         *p = 0xBEEF;
         return dst;
     }
 
-    *debug = items * size_of::<T>() as u32;
+    //*debug = items * size_of::<T>() as u32;
 
     let mut count = 0u32;
     let mut dst16 = Ptr::<u16>::null();
@@ -53,7 +54,6 @@ pub unsafe fn memcpy<T: Sized>(dst: Ptr<T>, src: Ptr<T>, items: u32) -> Ptr<T> w
             count -= 1;
         }
 
-
         len &= 3;
         if len == 0 {
             *p = 0xDEAD;
@@ -77,7 +77,6 @@ pub unsafe fn memcpy<T: Sized>(dst: Ptr<T>, src: Ptr<T>, items: u32) -> Ptr<T> w
             }
         }
     }
-
 
     count = len / 2;
 
