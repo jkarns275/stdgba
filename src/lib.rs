@@ -8,6 +8,8 @@ pub extern crate gbaimg;
 mod lang;
 pub use lang::*;
 
+#[macro_use]
+pub mod interrupt;
 pub mod reg;
 pub mod ptr;
 pub mod input;

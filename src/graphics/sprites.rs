@@ -1,6 +1,7 @@
 use core::mem::transmute;
 use collections::StaticArr;
 use ptr::Ptr;
+use graphics::*;
 
 /// Further documentation sprite related gba things can be found here: https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm#Graphics%20Hardware%20Overview
 /// and also here: https://www.coranac.com/tonc/text/regobj.htm
@@ -52,13 +53,6 @@ pub enum AffineMode {
 
     /// Doubles the size of the sprite (I think?)
     Doubled         = 0x0300_u16
-}
-
-#[derive(Copy, Clone)]
-#[repr(u16)]
-pub enum ColorMode {
-    _4bpp   = 0x0_u16,
-    _8bpp   = 0x2000_u16,
 }
 
 /// An enum that represents a sprite's dimensions (width then height). Since there are two attributes that need to be

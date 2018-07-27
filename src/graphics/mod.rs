@@ -4,10 +4,27 @@ use core::intrinsics::volatile_store;
 use reg;
 use ptr::Ptr;
 use collections::StaticArr;
+use interrupt::*;
 
+pub mod tiled_bg;
 pub mod sprites;
 pub use self::sprites::*;
 
+pub fn vsync_busy() {
+    while reg::REG_VCOUNT.volatile_load() >= 160 {}
+    while reg::REG_VCOUNT.volatile_load() < 160 {}
+}
+
+pub fn vsync_int() {
+    interrupt!(0x05);
+}
+
+#[derive(Copy, Clone)]
+#[repr(u16)]
+pub enum ColorMode {
+    _4bpp   = 0x0_u16,
+    _8bpp   = 0x2000_u16,
+}
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
