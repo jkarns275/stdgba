@@ -32,8 +32,8 @@ struct Chunk {
     prev: Ptr<Chunk>,
     /// Size of a sector, not including the space kept up by the Chunk struct
     len: u32,
-    /// Used for debugging...
-    magic: u32
+    //// Used for debugging...
+    // magic: u32
 }
 
 impl Chunk {
@@ -61,12 +61,12 @@ impl Chunk {
             next: Ptr::null(),
             prev: Ptr::null(),
             len: size,
-            magic: 0xDEADBABE
+            // magic: 0xDEADBABE
         }
     }
 
     pub unsafe fn initialize(&mut self) {
-        self.magic = 0xCAFEBABE;
+        // self.magic = 0xCAFEBABE;
         self.next = Ptr::null();
         self.prev = Ptr::null();
         self.len = 0;
@@ -90,7 +90,7 @@ impl Chunk {
 
     /// Call drop... Mostly for debugging to see deinitialized chunks in memory
     pub unsafe fn deinitialize(&mut self) {
-        self.magic = 0xDEADBEEF;
+        // self.magic = 0xDEADBEEF;
         self.next.num = 0;
         self.prev.num = 0;
         self.len = 0;
