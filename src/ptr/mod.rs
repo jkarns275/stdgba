@@ -12,42 +12,40 @@ pub union Ptr<T: Sized> {
 
 impl<T: Sized> Ptr<T> {
 
-    pub const fn from_u32(i: u32) -> Self { Ptr { num: i } }
+    pub const unsafe fn from_u32(i: u32) -> Self { Ptr { num: i } }
 
-    pub const fn from_ptr(ptr: * const T) -> Self { Ptr { ptr: ptr } }
+    pub const unsafe fn from_ptr(ptr: * const T) -> Self { Ptr { ptr: ptr } }
 
-    pub const fn from_mut_ptr(ptr_mut: * mut T) -> Self { Ptr { ptr_mut } }
+    pub const unsafe fn from_mut_ptr(ptr_mut: * mut T) -> Self { Ptr { ptr_mut } }
 
-    pub const fn from_ref(const_ref: &T) -> Self { Ptr { ptr: const_ref as * const T } }
+    pub const unsafe fn from_ref(const_ref: &T) -> Self { Ptr { ptr: const_ref as * const T } }
 
-    pub fn from_mut_ref(mut_ref: &mut T) -> Self { Ptr { ptr_mut: mut_ref as * mut T } }
+    pub unsafe fn from_mut_ref(mut_ref: &mut T) -> Self { Ptr { ptr_mut: mut_ref as * mut T } }
 
-    pub const fn null() -> Self { Ptr { num: 0 } }
+    pub const unsafe fn null() -> Self { Ptr { num: 0 } }
 
-    pub const fn transmute<S: Sized>(self) -> Ptr<S> {
+    pub unsafe fn transmute<S: Sized>(self) -> Ptr<S> {
         Ptr::<S>::from_u32(self.num)
     }
 
-    pub const fn is_null(&self) -> bool { self.num == 0 }
+    pub const fn is_null(&self) -> bool { unsafe { self.num == 0 } }
 
     pub unsafe fn as_ref(self) -> &'static T { mem::transmute(self.ptr) }
 
-    pub unsafe fn as_mut(mut self) -> &'static mut T { mem::transmute(self.ptr_mut) }
+    pub unsafe fn as_mut(self) -> &'static mut T { mem::transmute(self.ptr_mut) }
 
-    pub fn offset(mut self, n: i32) -> Self {
+    pub unsafe fn offset(mut self, n: i32) -> Self {
         self.signed += n * mem::size_of::<T>() as i32;
         self
     }
 
     #[inline(always)]
-    pub fn volatile_load(&self) -> T {
-        unsafe { volatile_load(self.ptr) }
-    }
+    pub unsafe fn volatile_load(&self) -> T { volatile_load(self.ptr) }
 
     #[inline(always)]
-    pub fn volatile_store(&mut self, dat: T) {
-        unsafe { volatile_store(self.ptr_mut, dat); }
-    }
+    pub unsafe fn volatile_store(&mut self, dat: T) { volatile_store(self.ptr_mut, dat); }
+
+    pub unsafe fn cpy(&self) -> Self { Ptr { num: self.num } }
 }
 
 impl<T: Sized> Deref for Ptr<T> {

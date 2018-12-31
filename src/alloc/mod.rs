@@ -4,7 +4,7 @@
 /// chunks of memory that will remain there for the entire lifetime of the program; memory can be
 /// freed, however doing so will lead to segmentation that may not be recoverable.
 ///
-/// Writing beyond the size of a memory chunk prevent future allocation or deallocation from working
+/// Writing beyond the size of a memory chunk can prevent future allocation or deallocation from working
 /// properly.
 use core::{ mem, iter };
 use core::option::*;
@@ -32,7 +32,7 @@ struct Chunk {
     prev: Ptr<Chunk>,
     /// Size of a sector, not including the space kept up by the Chunk struct
     len: u32,
-    //// Used for debugging...
+    //// Used for debugging the allocator, otherwise it should be commented out.
     // magic: u32
 }
 
@@ -56,7 +56,7 @@ impl Chunk {
         *current_head = ptr.num;
     }
 
-    pub const fn of_size(size: u32) -> Chunk {
+    pub const unsafe fn of_size(size: u32) -> Chunk {
         Chunk {
             next: Ptr::null(),
             prev: Ptr::null(),
@@ -243,10 +243,10 @@ impl Chunk {
     }
 
     #[inline(always)]
-    pub fn try_alloc(&mut self, buf_len: u32) -> Ptr<Chunk> {
+    pub unsafe fn try_alloc(&mut self, buf_len: u32) -> Ptr<Chunk> {
         // If there this block is too small...
-         if self.len <= buf_len {
-            return Ptr::<Chunk>::null();
+        if self.len <= buf_len {
+            return Ptr::<Chunk>::null()
         }
         let num_whole_blocks = buf_len >> BLOCK_SIZE_SHIFT;
         let len: u32;
@@ -272,44 +272,42 @@ impl Chunk {
         if len >= self.len {
             Ptr::<Chunk>::null()
         } else {
-            unsafe {
-                // Remaining space in this chunk, after accounting for a new Chunk and the len
-                // of the requested buffer.
-                let remaining_space = self.len - mem::size_of::<Chunk>() as u32 - len;
+            // Remaining space in this chunk, after accounting for a new Chunk and the len
+            // of the requested buffer.
+            let remaining_space = self.len - mem::size_of::<Chunk>() as u32 - len;
 
-                // If the remaining space isn't a whole-block or more, use that space too.
-                if remaining_space < BLOCK_SIZE {
-                    // The current Chunk is good as is
-                    self.remove_from_free_list();
-                    Chunk::append_to_used(self.as_gba_ptr());
-                    self.as_gba_ptr()
-                } else {
-                // Use the calculated amount of needed space, with some left over in new_chunk
-                    // create new chunk that will hold remaining space
-                    let mut new_chunk: Ptr<Chunk> = self.as_gba_ptr();
-                    new_chunk.num += mem::size_of::<Chunk>() as u32 + len;
+            // If the remaining space isn't a whole-block or more, use that space too.
+            if remaining_space < BLOCK_SIZE {
+                // The current Chunk is good as is
+                self.remove_from_free_list();
+                Chunk::append_to_used(self.as_gba_ptr());
+                self.as_gba_ptr()
+            } else {
+            // Use the calculated amount of needed space, with some left over in new_chunk
+                // create new chunk that will hold remaining space
+                let mut new_chunk: Ptr<Chunk> = self.as_gba_ptr();
+                new_chunk.num += mem::size_of::<Chunk>() as u32 + len;
 
-                    Chunk::initialize(&mut *new_chunk);
+                Chunk::initialize(&mut *new_chunk);
 
-                    // new_chunk is a new node in the linked list - place it after the current node
-                    new_chunk.next = self.next;
-                    if !self.next.is_null() {
-                        self.next.prev = new_chunk;
-                    }
-                    new_chunk.prev = Ptr::<Chunk>::from_mut_ref(self);
-
-                    // New chunk will have any remaining space that is in this chunk
-                    new_chunk.len = remaining_space;
-                    self.len = len;
-
-                    self.next = new_chunk;
-
-                    self.remove_from_free_list();
-
-                    let ptr = self.as_gba_ptr();
-                    Chunk::append_to_used(ptr);
-                    ptr
+                // new_chunk is a new node in the linked list - place it after the current node
+                new_chunk.next = self.next;
+                if !self.next.is_null() {
+                    self.next.prev = new_chunk;
                 }
+                new_chunk.prev = Ptr::<Chunk>::from_mut_ref(self);
+
+                // New chunk will have any remaining space that is in this chunk
+                new_chunk.len = remaining_space;
+                self.len = len;
+
+                self.next = new_chunk;
+
+                self.remove_from_free_list();
+
+                let ptr = self.as_gba_ptr();
+                Chunk::append_to_used(ptr);
+                ptr
             }
         }
     }
@@ -336,15 +334,13 @@ impl iter::Iterator for ChunkIterator {
         if self.current.is_none() {
             None
         } else {
-            unsafe {
-                let ch: Chunk = *(self.current.unwrap());
-                if ch.next.is_null() {
-                    self.current = None;
-                } else {
-                    self.current = Some(ch.next);
-                }
-                Some(ch)
+            let ch: Chunk = *(self.current.unwrap());
+            if ch.next.is_null() {
+                self.current = None;
+            } else {
+                self.current = Some(ch.next);
             }
+            Some(ch)
         }
     }
 }

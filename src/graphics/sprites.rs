@@ -7,12 +7,12 @@ use graphics::*;
 /// and also here: https://www.coranac.com/tonc/text/regobj.htm
 
 
-pub const OBJECT_SPRITE_ATTRIBUTES: StaticArr<SpriteAttributes> = StaticArr::new(Ptr::from_u32(0x07000000), 128);
-pub const OBJECT_SPRITE_AFFINE: StaticArr<SpriteAttributes> = StaticArr::new(Ptr::from_u32(0x07000000), 32);
+pub const OBJECT_SPRITE_ATTRIBUTES: StaticArr<SpriteAttributes> = unsafe { StaticArr::new(Ptr::from_u32(0x07000000), 128) };
+pub const OBJECT_SPRITE_AFFINE: StaticArr<SpriteAttributes> = unsafe { StaticArr::new(Ptr::from_u32(0x07000000), 32) };
 
 pub type Charblock = [u8; 0x4000];
-pub const TILE_MEMORY: StaticArr<Charblock> = StaticArr::new(Ptr::from_u32(0x06000000), 6);
-pub const PALETTE_MEMORY: StaticArr<u16> = StaticArr::new(Ptr::from_u32(0x05000200), 256);
+pub const TILE_MEMORY: StaticArr<Charblock> = unsafe { StaticArr::new(Ptr::from_u32(0x06000000), 6) };
+pub const PALETTE_MEMORY: StaticArr<u16> = unsafe { StaticArr::new(Ptr::from_u32(0x05000200), 256) };
 
 pub fn oam_clear() {
     let p = SpriteAttributes::default();

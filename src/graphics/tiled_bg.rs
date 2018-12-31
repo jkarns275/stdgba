@@ -1,5 +1,7 @@
 use reg;
 use graphics::ColorMode;
+use core::mem::transmute;
+use ptr::Ptr;
 
 /// Represents a Background control object as per http://www.coranac.com/tonc/text/regbg.htm
 #[derive(Copy, Clone)]
@@ -14,47 +16,54 @@ impl BgControl {
         unsafe { reg::REG_BGCNT.transmute::<BgControl>().offset(n as i32).as_mut() }
     }
 
-    pub fn set_priority(&mut self, mut priority: u16) {
+    pub fn set_priority(&mut self, mut priority: u16) -> &mut Self {
         self.0 &= !0b11;
         priority &= 0b11;
         self.0 |= priority;
+        self
     }
 
-    pub fn set_character_base_block(&mut self, mut block_n: u16) {
+    pub fn set_character_base_block(&mut self, mut block_n: u16) -> &mut Self {
         self.0 &= !0b1100;
         block_n &= 0b11;
         self.0 |= block_n << 2;
+        self
     }
 
-    pub fn set_color_mode(&mut self, color_mode: ColorMode) {
+    pub fn set_color_mode(&mut self, color_mode: ColorMode) -> &mut Self {
         self.0 &= !0x80;
         self.0 |= (color_mode as u16) >> 6;
+        self
     }
 
-    pub fn set_mosaic_enabled(&mut self, mosaic: bool) {
+    pub fn set_mosaic_enabled(&mut self, mosaic: bool) -> &mut Self {
         let p = mosaic as u16;
-        self.0 &= !0x01000000;
+        self.0 &= !0b01000000;
         self.0 |= p << 6;
+        self
     }
 
-    pub fn set_affine_wrapping_enabled(&mut self, wrapping: bool) {
+    pub fn set_affine_wrapping_enabled(&mut self, wrapping: bool) -> &mut Self {
         let p = wrapping as u16;
         self.0 &= !0x2000;
-        self.0 |= (p << 13);
+        self.0 |= p << 13;
+        self
     }
 
-    pub fn set_screen_base_block(&mut self, mut block_n: u16) {
+    pub fn set_screen_base_block(&mut self, mut block_n: u16) -> &mut Self {
         block_n &= 0b11111;
         self.0 |= block_n << 8;
+        self
     }
 
-    pub fn set_bg_size<Bg: BackgroundSize>(&mut self, bg_size: Bg) {
+    pub fn set_bg_size<Bg: BgSize>(&mut self, bg_size: Bg) -> &mut Self {
         self.0 &= 0x3FFF;
         self.0 |= bg_size.into_bg_bits();
+        self
     }
 }
 
-trait BgSize { fn into_bg_bits(self) -> u16; }
+pub trait BgSize { fn into_bg_bits(self) -> u16; }
 
 /// Represents a regular background size in terms of tiles (that is, an 8x8 image).
 #[repr(u16)]
@@ -84,20 +93,20 @@ pub enum AffineBgSize {
 
 impl BgSize for AffineBgSize { fn into_bg_bits(self) -> u16 { self as u16 } }
 
-#[repr(c)]
-#[derive(Clone)]
+#[repr(C)]
+#[derive(Copy, Clone)]
 struct BgOffsetInternal { x: i16, y: i16 }
 
-#[derive(Clone)]
 /// Represents the offset of a background. Since the x and y fields in BgOffsetInternal are write
 /// only, we keep a copy of x and y in this struct (since we can't read from the registers to use
 /// normal arithmetic operators like +=).
 ///
 /// The x and y coordinates of the background offset will be `mod mapsize`.
+#[derive(Clone)]
 struct BgOffset {
     x: i16,
     y: i16,
-    inner: * mut BgOffsetInternal
+    inner: Ptr<BgOffsetInternal>,
 }
 
 impl BgOffset {
@@ -105,7 +114,7 @@ impl BgOffset {
         n &= 3;
         BgOffset {
             x, y,
-            inner: reg::REG_BG_OFS.transmute::<BgOffset>().offset(n)
+            inner: unsafe { reg::REG_BG_OFS.transmute::<BgOffsetInternal>().offset(transmute(n)).transmute() },
         }
     }
 
@@ -183,7 +192,8 @@ impl TileEntry {
 pub type Screenblock = [TileEntry; 0x400];
 
 pub struct Tilemap {
-    inner: *mut Screenblock
+    inner: Ptr<TileEntry>,
+
 }
 
 impl Tilemap {
@@ -191,17 +201,17 @@ impl Tilemap {
     /// need to). Since there are 32 screenblocks in total, n = n (mod 32)
     pub fn new(mut n: i32) -> Self {
         n &= 31;
-        let inner = reg::VRAM.transmute::<Screenblock>().offset(n);
+        let inner = unsafe { reg::VRAM.transmute::<Screenblock>().offset(n).transmute() };
         Tilemap { inner }
     }
 
     pub fn entry(&mut self, n: u32) -> &'static mut TileEntry {
-        unsafe { self.inner.offset(n).transmute().as_mut() }
+        unsafe { self.inner.cpy().offset(transmute(n)).transmute::<TileEntry>().as_mut() }
     }
 }
 
 
-#[repr(c)]
+#[repr(C)]
 pub struct BgAffine {
     _padding: [u16; 4],
     dx: i32,

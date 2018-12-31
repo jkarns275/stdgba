@@ -12,8 +12,8 @@ pub unsafe fn memcpy<T: Sized>(dst: Ptr<T>, src: Ptr<T>, items: u32) -> Ptr<T> w
 
     //*debug = items * size_of::<T>() as u32;
 
-    let mut count = 0u32;
-    let mut dst16 = Ptr::<u16>::null();
+    let mut count;
+    let mut dst16;
     let mut src8 = src.transmute::<u8>();
 
     let mut len = items * (size_of::<T>() as u32);

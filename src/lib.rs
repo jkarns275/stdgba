@@ -1,6 +1,7 @@
-#![feature(i128_type, asm, lang_items, core, core_intrinsics, const_fn, untagged_unions, arbitrary_self_types)]
 #![no_std]
-#![feature(use_extern_macros)]
+#![feature(asm, lang_items, core_intrinsics, const_fn, untagged_unions, arbitrary_self_types, const_fn_union)]
+
+#![allow(dead_code)]
 
 pub extern crate gbaimg;
 pub use gbaimg::{ img_as_palleted_sprite_8bpp, img_as_palleted_sprite_4bpp };

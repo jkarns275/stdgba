@@ -2,17 +2,17 @@ use core::mem;
 use core::default::Default;
 use core::intrinsics::volatile_store;
 use reg;
-use ptr::Ptr;
-use collections::StaticArr;
-use interrupt::*;
 
 pub mod tiled_bg;
 pub mod sprites;
 pub use self::sprites::*;
 
 pub fn vsync_busy() {
-    while reg::REG_VCOUNT.volatile_load() >= 160 {}
-    while reg::REG_VCOUNT.volatile_load() < 160 {}
+    unsafe {
+        while reg::REG_VCOUNT.volatile_load() >= 160 {}
+        while reg::REG_VCOUNT.volatile_load() < 160 {}
+
+    }
 }
 
 pub fn vsync_int() {
