@@ -1,5 +1,5 @@
 # stdgba
-A small rust standard library for the GBA.
+A small rust standard library for the GBA. As of right now, I likely wont touch this project for a while. Hopefully someone finds it to be a useful reference to make rust libraries for the GBA, and the related projects I've made may help people get a working GBA rom for rust.
 
 This library intends to provide basic necessities needed to program Rust on the GBA.
 That would include:
